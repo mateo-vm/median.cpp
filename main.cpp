@@ -17,7 +17,6 @@
 
 using namespace std;
 
-
 int main(void)
 {
 	unsigned char OUT[WIDTH][HEIGHT];

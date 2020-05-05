@@ -14,15 +14,71 @@
 #define k_size 3
 #define ELEMENTS k_size*k_size
 
-int compare (const void * a, const void * b)
-{
+#define element_swap(a,b){unsigned char t=a;a=b;b=t; }
+
+int compare (const void * a, const void * b){
     return ( *(unsigned char*)a - *(unsigned char*)b );
+}
+
+unsigned char median_calc (const unsigned char kernel[]){
+    /*
+    // Using quick sort
+    qsort(kernel, ELEMENTS, sizeof(unsigned char), compare);
+    return kernel[ELEMENTS/2];
+     */
+
+    // Using Quick select
+    int low, median, high, ll, middle, hh;
+
+    // Copy array -- Improvement: look for a better way to do it
+    unsigned char k[ELEMENTS];
+    for (int i=0; i<ELEMENTS; i++){
+        k[i] = kernel[i];
+    }
+
+    low = 0;
+    high = ELEMENTS-1;
+    median = (low + high) / 2;
+
+    for (;;){
+        if (high <= low) return k[median];  // One element only
+        if (high == low +1){
+            // Two elements only
+            if (k[low] > k[high]) element_swap(k[low],k[high]);
+            return k[median];
+        }
+        // Find median of low, middle and high items; swap into position low
+        middle = (low + high) / 2;
+        if (k[middle] > k[high]) element_swap(k[middle],k[high])
+        if (k[low] > k[high]) element_swap(k[low],k[high])
+        if (k[middle] > k[low]) element_swap(k[middle],k[low])
+        // Swap low item (now in position middle) into position (low+1)
+        element_swap(k[middle],k[low+1])
+        // Nibble from each end towards middle, swapping items when stuck
+        ll = low + 1;
+        hh = high;
+        for (;;){
+            do ll++;
+            while (k[low] > k[ll]);
+            do hh--;
+            while (k[hh] > k[low]);
+            if (hh < ll) break;
+            element_swap(k[ll],k[hh])
+        }
+        // Swap middle item (in position low) back into correct position
+        element_swap(k[low],k[hh])
+        // Re-set active partition
+        if (hh <= median) low = ll;
+        if (hh >= median) high = hh -1;
+    }
 }
 
 void medianFilter(const unsigned char input[][HEIGHT], unsigned char output[][HEIGHT], unsigned int width, unsigned int height)
 {
     unsigned char kernel[ELEMENTS];
     int k_index;
+
+    unsigned char aux;
 
     // Place in a position not in the border
     for(int i=1; i<width-1; i++){
@@ -35,8 +91,8 @@ void medianFilter(const unsigned char input[][HEIGHT], unsigned char output[][HE
                 }
             }
             // Calculate the median
-            qsort(kernel, ELEMENTS, sizeof(unsigned char), compare);
-            output[i][j] = kernel[ELEMENTS/2];
+            output[i][j] = median_calc(kernel);
+            aux = output[i][j];
         }
     }
 
